@@ -9,6 +9,7 @@ const { OIDC_JWKS_URI } = process.env;
 export let authMiddleware: MiddlewareHandler<AuthEnv>;
 
 if (OIDC_JWKS_URI) {
+  console.log(`OIDC authentication enabled with JWKS URI: ${OIDC_JWKS_URI}`);
   const JWKS = createRemoteJWKSet(new URL(OIDC_JWKS_URI));
 
   authMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
