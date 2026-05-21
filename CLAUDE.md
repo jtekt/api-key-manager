@@ -16,7 +16,7 @@ No test runner is configured yet. The project uses ESM (`"type": "module"`) and 
 
 Backend-only REST microservice built with **Hono** on Node.js (`@hono/node-server`). No SSR, no static serving, no templating.
 
-**Planned stack** (see `SPECIFICATIONS.md`):
+**Stack**:
 - **Hono** — HTTP framework (`src/index.ts` entry point, port 3000)
 - **PostgreSQL** — persistence via `DATABASE_URL` env var
 - **Argon2id** — hashing for API keys (configurable via `ARGON2_MEMORY_COST`, `ARGON2_TIME_COST`, `ARGON2_PARALLELISM`)
@@ -24,7 +24,12 @@ Backend-only REST microservice built with **Hono** on Node.js (`@hono/node-serve
 
 ## Auth model
 
-The service trusts the `X-User-ID` header (set by the upstream UI after OIDC login). It does **not** implement its own authentication — all user-facing endpoints require this header to identify key ownership.
+`/keys/*` endpoints are protected by a two-mode auth middleware:
+
+- **With `OIDC_JWKS_URI`** (production): verifies JWT Bearer tokens against the remote JWKS; `OIDC_ISSUER` is checked if set. The `sub` claim becomes `userId`.
+- **Without `OIDC_JWKS_URI`** (dev): trusts the `X-User-ID` request header as `userId`. Still returns 401 if the header is absent.
+
+The `/validate` endpoint is unauthenticated — callers present the raw API key in the request body.
 
 ## API key format
 
@@ -43,9 +48,9 @@ The `/validate` endpoint is the hot path — it must support horizontal scaling 
 
 ## Database schema
 
-Single table `api_keys`: `id` (UUID PK), `user_id` (text), `name` (text), `hash` (text), `created_at`, `last_used_at`, `expires_at`, `revoked` (bool), `scopes` (jsonb).
+Single table `api_keys`: `id` (UUID PK), `user_id` (text), `name` (text), `hash` (text), `key_hint` (text — first 8 chars of plaintext, used to pre-filter candidates in `/validate`), `created_at`, `last_used_at`, `expires_at`, `revoked` (bool), `scopes` (jsonb).
 
-Key indexes: on `user_id`, on `revoked=false` (partial), on `expires_at`.
+Key indexes: on `user_id`, on `key_hint`, on `revoked=false` (partial), on `expires_at`.
 
 ## Security constraints
 
