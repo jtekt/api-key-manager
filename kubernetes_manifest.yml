@@ -21,6 +21,8 @@ spec:
           env:
             - name: OIDC_JWKS_URI
               value: http://keycloak.keycloak:8080/realms/jtekt/protocol/openid-connect/certs
+            - name: OIDC_USER_CLAIM
+              value: preferred_username
       imagePullSecrets:
         - name: ecr-credentials
 

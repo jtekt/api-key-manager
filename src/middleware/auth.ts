@@ -4,7 +4,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 
 export type AuthEnv = { Variables: { userId: string } };
 
-const { OIDC_JWKS_URI } = process.env;
+const { OIDC_JWKS_URI, OIDC_USER_CLAIM = 'sub' } = process.env;
 
 export let authMiddleware: MiddlewareHandler<AuthEnv>;
 
@@ -21,8 +21,9 @@ if (OIDC_JWKS_URI) {
       const { payload } = await jwtVerify(header.slice(7), JWKS, {
         issuer: process.env.OIDC_ISSUER,
       });
-      if (!payload.sub) return c.json({ error: "Unauthorized" }, 401);
-      c.set("userId", payload.sub);
+      const userId = payload[OIDC_USER_CLAIM] as string | undefined;
+      if (!userId) return c.json({ error: "Unauthorized" }, 401);
+      c.set("userId", userId);
       await next();
     } catch {
       return c.json({ error: "Unauthorized" }, 401);
