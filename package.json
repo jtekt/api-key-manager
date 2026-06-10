@@ -1,6 +1,7 @@
 {
   "name": "api-key-manager",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "dev": "tsx watch --env-file .env src/index.ts",
     "build": "tsc",
