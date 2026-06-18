@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { apiKeys } from '../db/schema.js'
 import { generateApiKey, hashKey } from '../crypto.js'
@@ -35,21 +35,30 @@ router.post('/', async (c) => {
 
 router.get('/', async (c) => {
   const userId = c.get('userId')
+  const limit = Math.min(Number(c.req.query('limit') ?? 20), 100)
+  const offset = Number(c.req.query('offset') ?? 0)
 
-  const rows = await db
-    .select({
-      id:         apiKeys.id,
-      name:       apiKeys.name,
-      createdAt:  apiKeys.createdAt,
-      lastUsedAt: apiKeys.lastUsedAt,
-      revoked:    apiKeys.revoked,
-      expiresAt:  apiKeys.expiresAt,
-    })
-    .from(apiKeys)
-    .where(eq(apiKeys.userId, userId))
-    .orderBy(desc(apiKeys.createdAt))
+  const where = eq(apiKeys.userId, userId)
 
-  return c.json(rows)
+  const [[{ total }], items] = await Promise.all([
+    db.select({ total: count() }).from(apiKeys).where(where),
+    db
+      .select({
+        id:         apiKeys.id,
+        name:       apiKeys.name,
+        createdAt:  apiKeys.createdAt,
+        lastUsedAt: apiKeys.lastUsedAt,
+        revoked:    apiKeys.revoked,
+        expiresAt:  apiKeys.expiresAt,
+      })
+      .from(apiKeys)
+      .where(where)
+      .orderBy(desc(apiKeys.createdAt))
+      .limit(limit)
+      .offset(offset),
+  ])
+
+  return c.json({ items, total })
 })
 
 router.delete('/:id', async (c) => {
