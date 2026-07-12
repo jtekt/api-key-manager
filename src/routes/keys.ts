@@ -38,7 +38,12 @@ router.get('/', async (c) => {
   const limit = Math.min(Number(c.req.query('limit') ?? 20), 100)
   const offset = Number(c.req.query('offset') ?? 0)
 
-  const where = eq(apiKeys.userId, userId)
+  const revokedParam = c.req.query('revoked')
+  const conditions = [eq(apiKeys.userId, userId)]
+  if (revokedParam === 'true') conditions.push(eq(apiKeys.revoked, true))
+  if (revokedParam === 'false') conditions.push(eq(apiKeys.revoked, false))
+
+  const where = and(...conditions)
 
   const [[{ total }], items] = await Promise.all([
     db.select({ total: count() }).from(apiKeys).where(where),
