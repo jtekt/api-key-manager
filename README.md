@@ -50,6 +50,20 @@ Set these in `.env` (see `.env.example`):
 
 `/validate` is unauthenticated — callers present the raw API key in the request body.
 
+## Integration
+
+Downstream services integrate with this API by validating keys on every request, without authenticating themselves.
+
+```mermaid
+flowchart LR
+    Caller[Caller] -- "request with ak_ key" --> Service[Downstream service]
+    Service -- "POST /validate { api_key }" --> API[api-key-manager-api]
+    API -- "valid, user_id, expires_at" --> Service
+    Service -- "allow / deny" --> Caller
+```
+
+A downstream service receives a request carrying an `ak_...` key and calls `/validate` — unauthenticated, since the key itself is the credential — to check it's valid before serving the request. This is the hot path and is designed to be stateless and horizontally scalable.
+
 ## API
 
 ### `POST /keys`
