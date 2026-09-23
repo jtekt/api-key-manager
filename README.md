@@ -107,7 +107,7 @@ Response `200`:
 { "valid": true, "user_id": "...", "expires_at": null }
 ```
 
-Returns `{ "valid": false }` if the key is malformed, unknown, revoked, or expired. On success, `last_used_at` is updated asynchronously.
+Returns `{ "valid": false }` if the key is malformed, unknown, revoked, or expired. On success, `last_used_at` is updated before the response is sent.
 
 ## Database
 
