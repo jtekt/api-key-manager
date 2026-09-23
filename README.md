@@ -66,6 +66,14 @@ A downstream service receives a request carrying an `ak_...` key and calls `/val
 
 ## API
 
+### `GET /`
+
+Returns the application name and version (the git tag the image was built from, or `dev`).
+
+```json
+{ "application_name": "api-key-manager", "version": "v1.0.0" }
+```
+
 ### `POST /keys`
 
 Create a new key for the authenticated user. Returns the plaintext key — the only time it is ever exposed.

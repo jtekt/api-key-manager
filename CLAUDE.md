@@ -43,6 +43,7 @@ Keys are `ak_` + 32 random bytes encoded as base64url. The plaintext is returned
 
 | Method | Path | Description |
 |--------|------|-------------|
+| `GET` | `/` | `{ application_name, version }`; version from `APP_VERSION` (set by the `--build-arg` in CI, default `dev`) |
 | `POST` | `/keys` | Create key (`name`, `expires_at` optional); returns plaintext once |
 | `GET` | `/keys` | List the user's keys; `?limit=` (≤100), `?offset=`, `?revoked=true\|false`; returns `{ items, total }` |
 | `DELETE` | `/keys/:id` | Revoke a key (sets `revoked=true`, row kept); 404 if not owned |
